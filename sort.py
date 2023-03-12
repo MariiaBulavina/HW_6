@@ -7,7 +7,6 @@ import os
 from normalize import normalise
 
 
-path = Path(r'/Users/bulavinamariia/Desktop/SOME_SHIT')
 
 
 extensions = {
@@ -18,17 +17,18 @@ extensions = {
     'archives': ['.zip', '.gz', '.tar']
 }
 
+try:
+    path = Path(sys.argv[1])
 
-def get_path():
+except IndexError as e:
 
-    try:
-        path = Path(sys.argv[1])
+    print(e)
 
-    except IndexError as e:
+    
 
-        print(e)
 
-    return path
+    
+
 
 
 
@@ -95,6 +95,8 @@ def delete_folders(folder_path):
 
 
 def main():
+
+    
 
     sort(path, extensions)
     delete_folders(path)
