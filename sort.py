@@ -1,107 +1,132 @@
 
 from pathlib import Path
-import shutil
 import sys
-import re
-import os
+import shutil
 from normalize import normalise
 
 
+archives = 'archives'
 
-
-extensions = {
+EXTENSIONS = {
     'images': ['.jpeg', '.png', '.jpg', '.svg'],
     'video': ['.avi', '.mp4', '.mov', '.mkv'],
     'documents': ['.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx'],
     'music': ['.mp3', '.ogg', '.wav', '.amr'],
-    'archives': ['.zip', '.gz', '.tar']
+    archives: ['.zip', '.gz', '.tar']
 }
 
-try:
-    path = Path(sys.argv[1])
+###################################
 
-except IndexError as e:
+def move(file:Path, path:Path, category:str):
 
-    print(e)
+    if category == 'unknown':
 
-    
+        return file.replace(path.joinpath(file.name))
 
-
-    
-
-
-
-
-def get_not_file_paths(path):
-
-    not_file_paths = [this.path for this in os.scandir(path) if this.is_dir()]
-    
-
-    print(not_file_paths)
-
-    return not_file_paths    
-
-
-
-
-
-
-
-
-
-def move(path: Path, file, k):
-
-    path_to_k = path.joinpath(k)
+    path_to_k = path.joinpath(category)
 
     if not path_to_k.exists():
 
         path_to_k.mkdir()
 
-    file.replace(path_to_k.joinpath(f'{normalise(file.stem)}{file.suffix}'))
+        file_stem = normalise(file.stem)
 
+    return file.replace(path_to_k.joinpath(f'{file_stem}{file.suffix}'))
 
+###################################
 
-def sort(path: Path, extensions):
+###################################
 
-    for file in path.glob('**/*.*'):
+def get_categories(file:Path):
 
-        for k, v in extensions.items():
+    extension = file.suffix.lower()
+     
+    for k, v in EXTENSIONS.items():
 
-            if file.suffix.lower() in v:
+        if extension in v:
 
-                move(path, file, k)   
+            return k
+    
+    return 'unknown'
 
+###################################
 
+###################################
 
-def delete_folders(folder_path):
+def sort(path:Path, current_dir:Path):
 
-    not_file_paths = get_not_file_paths(folder_path)
+    for item in [f for f in current_dir.glob('*') if f.name not in EXTENSIONS.keys()]:
 
-    for p in not_file_paths:
+        if item.is_file():
 
-        print(p)
+            category = get_categories(item)
 
-        a = os.listdir(p)
+            new_path = move(item, path, category)
+        
+        else:
 
-        print(a)
+            sort(path, item)
 
-        if not os.listdir(p):
-            
-            os.rmdir(p)
+            item.rmdir()
 
+###################################
 
+###################################
 
+def unpack(path:Path, arc_name:Path, extension:str ):
 
+    f_unpack = path / arc_name.stem
 
+    f_unpack.mkdir
 
-def main():
+    shutil.unpack_archive(arc_name, f_unpack, extension)
+
+###################################
+
+###################################
+def unpack_in(archive:Path, s_dict:dict):
+
+    for arc in archive.glob('?*.*'):
+
+        extension = arc.suffix
+
 
     
+    if extension in s_dict[archive.name]:
 
-    sort(path, extensions)
-    delete_folders(path)
+        extension = extension.split('.')[1]
 
+        unpack(archive, arc, extension)
+  
+###################################
+
+###################################
+def main():
+
+    try:
+        path = Path(sys.argv[1])
+
+    except IndexError:
+
+        return f'No path to folder. Take as parameter'
+    
+    if not path.exists():
+
+        return 'Sorry, folder not exists'
+    
+    sort(path, path)
+    
+
+    archive = path / archives
+
+    unpack_in(archive, EXTENSIONS )
+
+###################################
+
+###################################
 
 if __name__ == '__main__':
 
-    main()
+   print( main())
+
+###################################
